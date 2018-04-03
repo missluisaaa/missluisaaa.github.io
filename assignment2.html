@@ -60,7 +60,7 @@ void main() {
      vec3 L = vec3(.5*sin(5.*uTime),1.,1.);  //light
     float c = max(.01, dot(N, normalize(L)));
      c = step(0., N.z) * .5 * c;
-     vec3 color = vec3(c, c*c*c*c, c*c);
+     vec3 color = vec3(c, c*c*c*c, c*c); //pink color
      gl_FragColor = vec4(sqrt(color), 1.0);
    } else { 
    }
