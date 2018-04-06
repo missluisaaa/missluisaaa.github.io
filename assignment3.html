@@ -27,7 +27,8 @@ varying vec3 vPos;
 
 vec3 sphere(float r, float f, vec3 W, vec3 C, vec3 L) {
   //create ray
-   vec3 V = vec3(0., 0., f); //origin of ray
+  //origin of ray
+   vec3 V = vec3(0., 0., f); 
    vec3 P = V - C;
 
    float inner = pow(dot(W, P), 2.) - dot(P, P) + pow(r, 2.);
@@ -49,7 +50,7 @@ vec3 sphere(float r, float f, vec3 W, vec3 C, vec3 L) {
      if (t == 0.) N.z = -1.;
      else N = normalize(S - C);
    }
-   //black background
+   //background
    else {
      N.z = -1.;
    }
@@ -70,7 +71,7 @@ void main() {
    vec3 sphere2 = sphere(0.2, f, W, vec3(0.2, 0.2 + sin(uTime) / 2., -0.5 + sin(uTime) / 4.), L);
    vec3 N = sphere1;
 
-   //create a second sphere
+   //second sphere appears
    if (sphere2.z > sphere1.z) {
      N = sphere2;
    }
@@ -81,9 +82,9 @@ void main() {
    vec3 R = (2.5 * dot(N, L) * N) - L;
 
    //phong reflectance
-   float specular = 0.1; 
-   float diffuse = .4; 
-   float ambient = 0.1;
+  float diffuse = .25; 
+   float ambient = .25;
+   float specular = .1; 
 
    float c1 = pow(max(0., dot(E, R)), intensity);
    float c2 = max(0., dot(N, L));
