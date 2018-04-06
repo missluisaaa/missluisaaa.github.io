@@ -22,49 +22,82 @@
 <!!-------- FRAGMENT SHADER: THIS IS WHERE YOU WILL DO YOUR WORK -------->
 
 <script id='my_fragment_shader' type='x-shader/x-fragment'>
- uniform float uTime; 
- varying vec3 vPos;   
+uniform float uTime;
+varying vec3 vPos;
 
-  float f = 1.;              //focal length: distance of eye to image plane
-  float r = .6;              //radius
-  vec3 C = vec3(0.,0.,0.);   //center
-
-
-float sph(vec3 V, vec3 C, vec3 W, float r) {
+vec3 sphere(float r, float f, vec3 W, vec3 C, vec3 L) {
+  //create ray
+   vec3 V = vec3(0., 0., f); //origin of ray
    vec3 P = V - C;
-   float a = -(dot(W,P)); 
-   float b = pow(dot(W,P),2.)-dot(P,P) + pow(r,2.);
-   float c = sqrt(b); //quadratic equation
-   if (b < 0.) {
-      return -1.;
-   } else {
-      float t1 = a - c; 
-      float t2 = a + c;
-      if (t1>0.&& t2>0.) {
-         return t1;  //return where the ray hits the sphere first
-      } else {
-         return -1.;
-      }
+
+   float inner = pow(dot(W, P), 2.) - dot(P, P) + pow(r, 2.);
+   vec3 N = vec3(0., 0., 0.);
+
+   if (inner > 0.) {
+     float WP = -dot(W, P);
+     float root = sqrt(inner);
+
+     float t1 = WP - root;
+     float t2 = WP + root;
+     float t = 0.;
+
+     if (t1 > 0.) t = t1;
+     else if (t2 > 0.) t = t2;
+
+     vec3 S = V + t * W;
+
+     if (t == 0.) N.z = -1.;
+     else N = normalize(S - C);
    }
+   //black background
+   else {
+     N.z = -1.;
+   }
+
+   return N;
 }
 
 void main() {
-  vec3 V = vec3(0.,0.,f);  //origin
-   vec3 C = vec3(0.,0.,0.);   //center of sphere
-   vec3 W = normalize(vec3(vPos.x, vPos.y,-f)); //direction vector
+  //focal length 
+   float f = 4.;
+   //direction vector
+   vec3 W = normalize(vec3(vPos.x, vPos.y, - f));
+   vec3 E = -W;
+   vec3 L = vec3(0.5, 1., 1.);
 
-   float t = sph(V,C,W,r);
-   if (t > 0.) {
-     vec3 S = V + t*W;
-     vec3 N = normalize(S - C);
-     vec3 L = vec3(.5*sin(5.*uTime),1.,1.);  //light
-    float c = max(.01, dot(N, normalize(L)));
-     c = step(0., N.z) * .5 * c;
-     vec3 color = vec3(c, c*c*c*c, c*c); //pink color
-     gl_FragColor = vec4(sqrt(color), 1.0);
-   } else { 
+   //movement of the spheres
+   vec3 sphere1 = sphere(0.3, f, W, vec3(-0.2 + sin(uTime) / 4., -0.2, -0.1 + sin(uTime) / 3.), L);
+   vec3 sphere2 = sphere(0.2, f, W, vec3(0.2, 0.2 + sin(uTime) / 2., -0.5 + sin(uTime) / 4.), L);
+   vec3 N = sphere1;
+
+   //create a second sphere
+   if (sphere2.z > sphere1.z) {
+     N = sphere2;
    }
- }</script>
+
+  //higher number = more shiny
+   float intensity = 3.25;
+   //size of the highlight
+   vec3 R = (2.5 * dot(N, L) * N) - L;
+
+   //phong reflectance
+   float specular = 0.1; 
+   float diffuse = .4; 
+   float ambient = 0.1;
+
+   float c1 = pow(max(0., dot(E, R)), intensity);
+   float c2 = max(0., dot(N, L));
+
+   float c = specular * c1 + diffuse * c2 + ambient;
+
+   c = step(0., N.z) * .5 * c;
+   //color of the spheres
+   vec3 color = vec3(c, c*c*c*c, c*c);
+   gl_FragColor = vec4(sqrt(color), 1.0);
+ }
+
+
+ </script>
 
 
 <!!-------- CREATE A PROPERLY DESCRIPTIVE TITLE BELOW -------->
