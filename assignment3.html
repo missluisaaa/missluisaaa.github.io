@@ -1,5 +1,6 @@
 <script src=lib1.js></script>
 
+
 <body bgcolor=black text=white link=white alink=white vlink=white>
 <center>
 <canvas id='canvas1' width=400 height=400></canvas>
@@ -124,7 +125,7 @@ var vs = my_vertex_shader.innerHTML,
     fs = my_fragment_shader.innerHTML;
     fs = fs.substring(1, fs.length);
 document.body.innerHTML = [''
-   ,'<center><font size=6 color=#b0b0b0>' + my_title.innerHTML + '</center>'
+   ,'<center><font size=6 color=#ffb3b3>' + my_title.innerHTML + '</center>'
    ,'<TABLE cellspacing=0 cellpadding=0><TR>'
    ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
    ,'</TR><TR>'
@@ -133,10 +134,10 @@ document.body.innerHTML = [''
    ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
    ,'<td valign=top>'
    ,'<textArea id=textArea spellcheck=false '
-   ,'style="font:16px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'style="font:14px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
    ,'></textArea>'
    ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
-   ,'<td valign=top><font size=5>' + my_instructions.innerHTML + '</td>'
+   ,'<td valign=top><font size=4>' + my_instructions.innerHTML + '</td>'
    ,'</tr></table>'
    ,'</TR></TABLE>'
    ].join('');
