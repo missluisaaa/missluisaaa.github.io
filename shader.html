@@ -26,17 +26,18 @@
  varying vec3 vPos;     // -1 < vPos.x < +1
                         // -1 < vPos.y < +1
                         //      vPos.z == 0
- void main() {    // YOU MUST DEFINE main()
+ void main() {   
+    // YOU MUST DEFINE main()
     // HERE YOU CAN WRITE ANY CODE TO
     // DEFINE A COLOR FOR THIS FRAGMENT
-    float red   = tan(vPos.x * uTime);
-    float green = sin(vPos.y);
-    float blue  = tan(uTime);
-    float alpha = 2.;
+    float red   = sin(vPos.x) * cos(5.5 * uTime);
+    float green = sin(vPos.y) * cos(5.5 * uTime);
+    float blue  = sin(10.) * vPos.x * vPos.y;
+
     // R,G,B EACH RANGE FROM 0.0 TO 1.0
     vec3 color = vec3(red, green, blue);
     // THIS LINE OUTPUTS THE FRAGMENT COLOR
-    gl_FragColor = vec4(sqrt(color), alpha);
+    gl_FragColor = vec4(sqrt(color), 1.);
  }</script>
 
 
@@ -52,7 +53,8 @@ Homework 1: Shader
 <!!-------- HERE IS WHERE YOU CAN PROVIDE A LONGER TEXT DESCRIPTION -------->
 
 <script id='my_instructions' type='text/html'><font color=#b0b0b0>
-The <code>uTime</code>values create a grid with lines that keeps expanding. Initially, the design appears with only a couple of lines of a certain width. The longer a person looks at the screen, more lines apppear on the grid and it is apparent that their width has lessened. If you watch long enought it will eventually become an optic illusion. 
+I wanted this shader to demonstrate a formula that utilizes the <code>x</code> and <code>y</code> positions, as well as the <code>vPos</code> and <code>Utime</code> simultaniously. The color of quadrant II and quadrant IV alternate, the same way that quadrant I and III do. I made this obvious by making a square black.
+
 </script>
 
 
@@ -63,7 +65,7 @@ var vs = my_vertex_shader.innerHTML,
     fs = my_fragment_shader.innerHTML;
     fs = fs.substring(1, fs.length);
 document.body.innerHTML = [''
-   ,'<center><font size=6 color=#b0b0b0>' + my_title.innerHTML + '</center>'
+   ,'<center><font size=6 color=#ffb3b3>' + my_title.innerHTML + '</center>'
    ,'<TABLE cellspacing=0 cellpadding=0><TR>'
    ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
    ,'</TR><TR>'
@@ -72,7 +74,7 @@ document.body.innerHTML = [''
    ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
    ,'<td valign=top>'
    ,'<textArea id=textArea spellcheck=false '
-   ,'style="font:16px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'style="font:14px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
    ,'></textArea>'
    ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
    ,'<td valign=top><font size=5>' + my_instructions.innerHTML + '</td>'
