@@ -1,20 +1,19 @@
 body{
     font-family: arial; 
     font-size: 20px; 
-    background: #bdacd1;
-    color: #8B008B;
+    background:  #ff6666;
+    color: #ffb3b3;
 }
 
 h1.intro{
 	font-style: normal;
 	font-weight: bold;
 	font-size: 24px;
-	color: #8B008B;
+	color: #ffb3b3;
 }
 
 h2.intro {
 	font-style: normal;
 	font-size: 18px;
-	color: #8B008B;
-
+	color: #ffb3b3;
 }
