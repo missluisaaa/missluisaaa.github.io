@@ -73,7 +73,7 @@ void main() {
       vec3 N = (P.xyz - C) / r; //do shading 
       vec3 L = normalize(vec3(1.,1.,1.));
       float c = .1 + .9 * max(0., dot(N, L));
-      color = vec3(.3 * c, .4 * c, 2. * c);
+      color = vec3(c, c*c*c*c, c*c*c);
    }
    gl_FragColor = vec4(sqrt(color), 1.0);
 }
