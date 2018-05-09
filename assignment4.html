@@ -43,14 +43,14 @@ void main() {
 
    //sphere1
    vec3 C1 = S1.xyz; //separate center
-   float r1 = S1.w;  //and redius
+   float r1 = S1.w;  //and radius
    C1 = (uMat * vec4(C1, 2.)).xyz;  //apply umatrix
 
    //C1 = (identity * vec4(C1, 1.)).xyz;
 
    //sphere2
    vec3 C2 = S2.xyz; //separate center
-   float r2 = S2.w;  //and redius
+   float r2 = S2.w;  //and radius
    C2 = (uMat * vec4(C2, 2.)).xyz; //apply umatrix 
 
    //two spheres
