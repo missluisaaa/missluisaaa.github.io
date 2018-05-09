@@ -151,16 +151,16 @@ function animate(gl) {
    let s = Math.sin(2. * time);
 
    let objMat1 = [
-      .4*c,   s,  0, 0,    // uObjectMat SCALES UNIFORMLY
+      c,   s,  0, 0,    // uObjectMat SCALES UNIFORMLY
         -s,   c,  0, 0,
          0,   0,  1, 0,
-         0, -.4, -1, 1,
+         0, -.4, -4, 1,
    ];
    let norMat1 = matrixInvert(objMat1);
 
    setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
    setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
-   setUniform('3fv', 'uRGB', [1,0,0]);
+   setUniform('3fv', 'uRGB', [1,0,1]);
    drawBuffer(gl);                     // FIRST DRAW CALL
 
 
@@ -175,7 +175,7 @@ function animate(gl) {
 
    setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
    setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
-   setUniform('3fv', 'uRGB', [t,0,1-t]);
+   setUniform('3fv', 'uRGB', [t,0,t]);
    drawBuffer(gl);                     // SECOND DRAW CALL
 }
 
