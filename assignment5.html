@@ -40,7 +40,7 @@ void main() {
    float c = 9. + 2. * max(1.,
              dot(normal, lDir));
    c*= noise(100. * tan(vPos * .75));
-   vec3 color = uRGB / c;
+   vec3 color = uRGB - c;
    gl_FragColor = vec4(sqrt(color), 1.0);
 }
 
@@ -49,7 +49,7 @@ void main() {
 
 <script id='instructions' type='text/html'><font color=#ffb3b3>
 <p>
-This scene mimics the motion of fireworks in the air. I used a noise function to create this effect. 
+This scene mimics the motion of fireworks in the air. I used a noise function to create this effect. The white background represents the light/brightness. 
 </script>
    
 <script>
@@ -127,7 +127,7 @@ function animate(gl) {
    setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uCursor', cursor);
 
-   var zRange = 10; // DEFINE A RANGE FOR Z VALUES
+   var zRange = 100; // DEFINE A RANGE FOR Z VALUES
    var fl = 500;      // FOCAL LENGTH OF VIRTUAL CAMERA
 
    // DEFINE THE PERSPECTIVE PROJECTION MATRIX
@@ -151,10 +151,10 @@ function animate(gl) {
    let s = Math.sin(2. * time);
 
    let objMat1 = [
-      .5*c,   s,  0, 0,    // uObjectMat SCALES UNIFORMLY
+      .4*c,   s,  0, 0,    // uObjectMat SCALES UNIFORMLY
         -s,   c,  0, 0,
          0,   0,  1, 0,
-         0, -.5, -1, 1,
+         0, -.4, -1, 1,
    ];
    let norMat1 = matrixInvert(objMat1);
 
@@ -170,7 +170,8 @@ function animate(gl) {
    objMat1[14] *= -1;
    norMat1 = matrixInvert(objMat1);
 
-   let t = 2. + 1. * Math.tan(6 * time); // ANIMATE COLOR
+   let t = 1. + 1. * Math.sin(50 * time); // ANIMATE COLOR
+
 
    setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
    setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
