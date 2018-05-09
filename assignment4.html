@@ -16,12 +16,16 @@
 </script>
 
 <script id='my_fragment_shader' type='x-shader/x-fragment'>
-uniform float uTime;
-varying vec3  vPos;
-uniform mat4  uMat;
+uniform float uTime; //time in seconds
+uniform mat4  uMat;  //setting up matrices 
+varying vec3  vPos;  // -1 < vPos.x < +1
+                     // -1 < vPos.y < +1
+                     //      vPos.z == 0
 
-vec4 raySph(vec3 V,vec3 W,vec4 S) {// TRACE RAY
-   vec3  P = S.xyz - V;            // TO SPHERE
+//uniform mat4 identity;
+
+vec4 raySph(vec3 V,vec3 W,vec4 S) {//trace ray
+   vec3  P = S.xyz - V;            //to sphere
    float b = dot(W, P);
    float d = b * b - dot(P, P) + S.w * S.w;
    float t = b - sqrt(d);
@@ -29,31 +33,57 @@ vec4 raySph(vec3 V,vec3 W,vec4 S) {// TRACE RAY
 }
 
 void main() {
-   float f = 5.;                // FOCAL LENGTH
-   vec3 color = vec3(0.,0.,.1); // BACKGD COLOR
-   vec3 V = vec3(0., 0., f);    // CREATE RAY
-   vec3 W = normalize(vec3(vPos.xy, -f));
-   vec4 S = vec4(0.,0.,0.,.5); // DEFINE SPHERE
+   float f = 4.;   //focal length             
+   vec3 color = vec3(0.,0.,.0); //background color 
+   vec3 V = vec3(0.,-0.5, f);    //create ray 
+   vec3 W = normalize(vec3(vPos.xy, -f)); //direction
+   vec4 S1 = vec4(0.,0.,0.,.5); //define sphere 1
+   vec4 S2 = vec4(-.8, -.8,.3,.2); //define sphere 2
+   float z = -100.;
 
-   vec3 C = S.xyz;           // SEPARATE CENTER
-   float r = S.w;                 // AND RADIUS
-   C = (uMat * vec4(C, 1.)).xyz;  // APPLY uMat
+   //sphere1
+   vec3 C1 = S1.xyz; //separate center
+   float r1 = S1.w;  //and redius
+   C1 = (uMat * vec4(C1, 2.)).xyz;  //apply umatrix
 
-   vec4 P = raySph(V,W,vec4(C,r));// SHOOT RAY:
-   if (P.w > 0.) {                // IF IT HITS
-      vec3 N = (P.xyz - C) / r;   // DO SHADING
+   //C1 = (identity * vec4(C1, 1.)).xyz;
+
+   //sphere2
+   vec3 C2 = S2.xyz; //separate center
+   float r2 = S2.w;  //and redius
+   C2 = (uMat * vec4(C2, 2.)).xyz; //apply umatrix 
+
+   //two spheres
+   vec4 P1 = raySph(V,W, vec4(C1,r1));
+   vec4 P2 = raySph(V,W, vec4(C2,r2));
+
+   vec4 P = P1;
+   vec3 C = C1;
+   float r = r1;
+
+   //shoot ray 
+   if (P.w <= 0. || P.z > P2.z) {
+     P = P2;
+     C = C2;
+     r = r2;
+   }
+
+   //ray tracing from the notes
+   if (P.w > 0.) { //if it hits
+      vec3 N = (P.xyz - C) / r; //do shading 
       vec3 L = normalize(vec3(1.,1.,1.));
       float c = .1 + .9 * max(0., dot(N, L));
-      color = vec3(c, c*c, c*c*c);
+      color = vec3(.3 * c, .4 * c, 2. * c);
    }
    gl_FragColor = vec4(sqrt(color), 1.0);
-}</script>
+}
+
+</script>
 
 <script id='instructions' type='text/html'><font color=#b0b0b0>
-<b>Description</b>
-<p>
-Remember to describe what you are
-trying to do.
+
+Matrix transformation primitives control these two spheres.
+
 </script>
    
 <script>
@@ -62,7 +92,7 @@ var vs = my_vertex_shader.innerHTML,
     fs = fs.substring(1, fs.length);
 
 document.body.innerHTML = [''
-   ,'<center><font size=6 color=#b0b0b0>Name of your assignment goes here</center>'
+   ,'<center><font size=6 color=#ffb3b3> Homework 4: Matrix Transformation</center>'
    ,'<TABLE cellspacing=0 cellpadding=0><TR>'
    ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
    ,'</TR><TR>'
@@ -71,10 +101,10 @@ document.body.innerHTML = [''
    ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
    ,'<td valign=top>'
    ,'<textArea id=textArea spellcheck=false '
-   ,'style="font:16px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'style="font:14px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
    ,'></textArea>'
    ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
-   ,'<td valign=top><font size=5>' + instructions.innerHTML + '</td>'
+   ,'<td valign=top><font size=4>' + instructions.innerHTML + '</td>'
    ,'</tr></table>'
    ,'</TR></TABLE>'
    ].join('');
