@@ -1,1 +1,281 @@
+<script src=lib4.js></script>
 
+<body bgcolor=black text=white link=white alink=white vlink=white>
+<center>
+<canvas id='canvas1' width=400 height=400></canvas>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPos; // VERTEX ATTRIBUTES: POSITION
+   attribute vec3 aNor; //                    NORMAL
+   attribute vec2 aUV ; //                    TEXTURE U,V
+
+   uniform mat4 uPPMat;     // PERSPECTIVE PROJECTION MATRIX
+   uniform mat4 uObjectMat; // OBJECT TRANSFORMATION MATRIX
+   uniform mat4 uNormalMat; // NORMAL TRANSFORMATION MATRIX
+
+   varying   vec3 vPos; // TRANSFORMED POSITION
+   varying   vec3 vNor; // TRANSFORMED NORMAL
+   varying   vec2 vUV ;
+
+   void main() {
+      gl_Position = uPPMat * uObjectMat * vec4(aPos, 1.);
+      vPos = aPos;
+      vNor = (vec4(aNor, 0.) * uNormalMat).xyz;
+      vUV  = aUV ;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+varying vec3  vPos;
+varying vec3  vNor;
+varying vec2  vUV ;
+uniform vec3  uRGB;
+uniform mat4 uMat[3];
+
+void main() {
+   vec3 normal = normalize(vNor);
+   vec3 lDir = normalize(vec3(1.,1.,1.));
+   float c = 0.1 + 0.9 * max(0.,
+             dot(normal, lDir));
+   vec3 color = uRGB * c;
+   gl_FragColor = vec4(sqrt(color), 1.0);
+}</script>
+
+<script id='instructions' type='text/html'><font color=#ffb3b3>
+<p>
+Write something here about the assignment 
+</script>
+   
+<script>
+var vs = my_vertex_shader.innerHTML,
+    fs = my_fragment_shader.innerHTML;
+    fs = fs.substring(1, fs.length);
+
+document.body.innerHTML = [''
+   ,'<center><font size=6 color=#ffb3b3> Homework 6: Spheres, Cylinders & Cubes</center>'
+   ,'<TABLE cellspacing=0 cellpadding=0><TR>'
+   ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
+   ,'</TR><TR>'
+   ,'<table cellspacing=10>'
+   ,'<tr>'
+   ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
+   ,'<td valign=top>'
+   ,'<textArea id=textArea spellcheck=false '
+   ,'style="font:14px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'></textArea>'
+   ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
+   ,'<td valign=top><font size=5>' + instructions.innerHTML + '</td>'
+   ,'</tr></table>'
+   ,'</TR></TABLE>'
+   ].join('');
+
+var i, text = fs.split('\n'), cols = 0;
+for (i = 0 ; i < text.length ; i++)
+   cols = Math.max(cols, text[i].length);
+
+textArea.rows = text.length;
+textArea.cols = cols;
+textArea.value = fs;
+textArea.style.backgroundColor = '#202020';
+textArea.style.color = 'white';
+textArea.onkeyup = function() { canvas1.setShaders(vs, this.value); }
+
+var startTime = Date.now();
+
+function cylinderVertex(u,v){
+  let theta = 2 * Math.PI * u;
+  let c = Math.cos(theta);
+  let s = Math.sin(theta);
+
+  if (v==0) {
+    return [0,0,-1,0,0,-1,u,v];
+  }
+
+  if(v==0.2){
+    return [c,s,-1,0,0,-1,u,v];
+  }
+
+  if(v==0.4){
+    return [c,s,-1,c,s,0,u,v];
+  }
+
+  if (v==0.6){
+    return [c,s,1,c,s,0,u,v];
+  }
+
+  if(v==0.8){
+    return [c,s,1,0,0,1,u,v];
+  }
+
+  if(v==1){
+    return [0,0,1,0,0,1,u,v];
+  }
+}  
+
+//returns one vertex of a unit sphere 
+function sphereVertex(u, v) {
+  let theta = 2 * Math.PI * u;
+  let phi   = Math.PI * (v - .5);
+  let x = Math.cos(phi) * Math.cos(theta);
+  let y = Math.cos(phi) * Math.sin(theta);
+  let z = Math.sin(phi);
+  return [x, y, z,  x, y, z,  u, v];
+}
+
+function zCheck(v){
+  let obj = {};
+if(v==(0.2)) {
+    obj.pos = -1;
+    obj.nor = -1;
+  }
+  else if (v==(0.4)) {
+    obj.pos = -1;
+    obj.nor = 0;
+  }
+  else if (v==(0.6)) {
+    obj.pos = 1;
+    obj.nor = 0;
+  }
+  else if(v==(0.8)) {
+    obj.pos = 1;
+    obj.nor = 1;
+  }
+return obj;
+}
+
+function cubeVertex(u,v) {
+  let z = zCheck(v);
+  console.log(z);
+  if(v==0) {
+    return [0,0,-1,0,0,-1,u,v];
+  }
+  if(v==1) {
+    return [0,0,1,0,0,1,u,v];
+  }
+  if (u==0) {
+      return [1,1,z.pos,0,0,z.nor,u,v];
+  }
+  else if(u==(0.125)) {
+      return [1,1,z.pos,0,1,z.nor,u,v];
+  }
+  else if (u==(0.25)) {
+      return [-1,1,z.pos,0,1,z.nor,u,v];
+  }
+  else if (u==(0.375)) {
+      return [-1,1,z.pos,-1,0,z.nor,u,v];
+  }
+  else if (u==(0.5)) {
+      return [-1,-1,z.pos,-1,0,z.nor,u,v];
+  }
+  else if (u==(0.625)) {
+      return [-1,-1,z.pos,0,-1,z.nor,u,v];
+  }
+  else if (u==(0.75)) {
+      return [1,-1,z.pos,0,-1,z.nor,u,v];
+  }
+  else if (u==(0.875)) {
+      return [1,-1,z.pos,1,0,z.nor,u,v];
+  }
+  else {
+      return [1,1,z.pos,1,0,z.nor,u,v];
+  }
+}
+
+//create a parametric shape as a single triangle strip 
+function createParametricShape(func, nu, nv) {
+  let vertices = [];
+  for (let j = 0 ; j < nv ; j++) {
+     let v0 =  j    / nv;
+     let v1 = (j+1) / nv;
+     for (let i = 0 ; i <= nu ; i++) {
+        let u = i / nu;
+  if (j % 2)
+     u = 1 - u;
+  vertices = vertices.concat(func(u, v0));
+  vertices = vertices.concat(func(u, v1));
+     }
+  }
+  return vertices;
+}
+
+//generate the triangle strip 
+//CAN CHANGE THESE NUMBERS 
+var sphereTriangleStrip = createParametricShape(sphereVertex, 50, 40);
+var cylinderTriangleStrip = createParametricShape(cylinderVertex, 50, 5);
+var cubeTrangleStrip = createParametricShape(cubeVertex, 8, 5);
+
+function animate(gl) {
+   let time = (Date.now() - startTime) / 1000;
+
+   setUniform('1f', 'uTime', time);
+   setUniform('3fv', 'uCursor', cursor);
+
+   var zRange = 8; // DEFINE A RANGE FOR Z VALUES
+   var fl = 30;      // FOCAL LENGTH OF VIRTUAL CAMERA
+
+   // DEFINE THE PERSPECTIVE PROJECTION MATRIX
+   setUniform('Matrix4fv', 'uPPMat', false, [
+          1,  0,         0,     0,
+          0,  1,         0,     0,
+          0,  0, -1/zRange, -1/fl,
+          0,  0,         0,     1,
+   ]);
+
+
+   // SEND SPHERE GEOMETRY DOWN TO GPU AS A TRIANGLE STRIP
+   setBuffer(gl, sphereTriangleStrip);
+
+
+   // FIRST SPHERE, USING SPHERE TRIANGLE STRIP
+   let c = Math.cos(1.3 * time);
+   let s = Math.sin(1.3 * time);
+
+   let objMat1 = [
+      c,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
+       0,   1,  c, 0,
+       s,   0,  1, 0,
+        1, 1, 0.5, 2,
+   ];
+
+   let norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1,0,100]);
+   drawBuffer(gl);                     // FIRST DRAW CALL
+
+   setBuffer(gl, cylinderTriangleStrip);
+
+   //change these values
+   let objMat2 = [
+      c,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
+       0,   1,  0, 0,
+       s,   0,  c, 0,
+        -1, 0, c, 2,
+   ];
+
+   let norMat2 = matrixInvert(objMat2);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat2);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat2);
+   setUniform('3fv', 'uRGB', [50,5,0]);
+   drawBuffer(gl);
+   setBuffer(gl, cubeTrangleStrip);
+
+//change these values 
+   let objMat3 = [
+      c*0.5,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
+       0,   1,  0, 0,
+       -s,   0,  c*2, 0,
+        0, -1, c, 2,
+   ];
+   let norMat3 = matrixInvert(objMat3);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat3);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat3);
+   setUniform('3fv', 'uRGB', [0,5,100]);
+   drawBuffer(gl);
+}
+
+gl_start(canvas1, vs, fs);
+</script>
