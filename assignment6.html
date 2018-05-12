@@ -39,6 +39,7 @@ void main() {
    vec3 lDir = normalize(vec3(1.,1.,1.));
    float c = 0.1 + 1.0 * max(0.,
              dot(normal, lDir));
+   c*= noise(100. * tan(vPos * .1));
    vec3 color = uRGB * c;
    gl_FragColor = vec4(sqrt(color), 1.0);
 }</script>
@@ -83,37 +84,7 @@ textArea.style.color = 'white';
 textArea.onkeyup = function() { canvas1.setShaders(vs, this.value); }
 
 var startTime = Date.now();
-
-function cylinderVertex(u,v){
-  let theta = 2 * Math.PI * u;
-  let c = Math.cos(theta);
-  let s = Math.sin(theta);
-
-  if (v==0) {
-    return [0,0,-1,0,0,-1,u,v];
-  }
-
-  if(v==0.2){
-    return [c,s,-1,0,0,-1,u,v];
-  }
-
-  if(v==0.4){
-    return [c,s,-1,c,s,0,u,v];
-  }
-
-  if (v==0.6){
-    return [c,s,1,c,s,0,u,v];
-  }
-
-  if(v==0.8){
-    return [c,s,1,0,0,1,u,v];
-  }
-
-  if(v==1){
-    return [0,0,1,0,0,1,u,v];
-  }
-}  
-
+ 
 //returns one vertex of a unit sphere 
 function sphereVertex(u, v) {
   let theta = 2 * Math.PI * u;
@@ -121,7 +92,7 @@ function sphereVertex(u, v) {
   let x = Math.cos(phi) * Math.cos(theta);
   let y = Math.cos(phi) * Math.sin(theta);
   let z = Math.sin(phi);
-  return [x, y, z,  x, y, z,  u, v];
+  return [x, y, z,  x, y, z, u, v];
 }
 
 function zCheck(v){
@@ -145,42 +116,58 @@ if(v==(0.2)) {
 return obj;
 }
 
-function cubeVertex(u,v) {
-  let z = zCheck(v);
-  console.log(z);
-  if(v==0) {
+function cylinderVertex(u,v){
+  let theta = 2 * Math.PI * u;
+  let c = Math.cos(theta);
+  let s = Math.sin(theta);
+
+  if (v==0) {
     return [0,0,-1,0,0,-1,u,v];
   }
-  if(v==1) {
+  if(v==0.2){
+    return [c,s,-1,0,0,-1,u,v];
+  }
+  if(v==0.4){
+    return [c,s,-1,c,s,0,u,v];
+  }
+  if (v==0.6){
+    return [c,s,1,c,s,0,u,v];
+  }
+  if(v==0.8){
+    return [c,s,1,0,0,1,u,v];
+  }
+  if(v==1){
     return [0,0,1,0,0,1,u,v];
   }
-  if (u==0) {
-      return [1,1,z.pos,0,0,z.nor,u,v];
-  }
-  else if(u==(0.125)) {
-      return [1,1,z.pos,0,1,z.nor,u,v];
-  }
-  else if (u==(0.25)) {
-      return [-1,1,z.pos,0,1,z.nor,u,v];
-  }
-  else if (u==(0.375)) {
-      return [-1,1,z.pos,-1,0,z.nor,u,v];
-  }
-  else if (u==(0.5)) {
-      return [-1,-1,z.pos,-1,0,z.nor,u,v];
-  }
-  else if (u==(0.625)) {
-      return [-1,-1,z.pos,0,-1,z.nor,u,v];
-  }
-  else if (u==(0.75)) {
-      return [1,-1,z.pos,0,-1,z.nor,u,v];
-  }
-  else if (u==(0.875)) {
-      return [1,-1,z.pos,1,0,z.nor,u,v];
-  }
-  else {
-      return [1,1,z.pos,1,0,z.nor,u,v];
-  }
+} 
+
+function cubeVertex(u,v){
+  if(v==0){
+    return [0,0,-1,0,0,-1,u,v];
+  }else if (v==1){
+    return [0,0,1,0,0,1,u,v];
+  }else{
+    let normZ=0;
+    let posZ=0; 
+    switch(v){
+      case(0.2):posZ=-1; normZ=-1; break;
+      case(0.4):posZ=-1; normZ=0; break;
+      case(0.6):posZ=1; normZ=0; break;
+      case(0.8):posZ=1; normZ=1; break;
+    }
+    
+    switch(u){
+      case 0:return [1,1,posZ,1,0,normZ,u,v];
+      case (0.125): return [1,1,posZ,0,1,normZ,u,v];
+      case (0.25): return [-1,1,posZ,0,1,normZ,u,v];
+      case (0.375): return [-1,1,posZ,-1,0,normZ,u,v];
+      case (0.5): return [-1,-1,posZ,-1,0,normZ,u,v];
+      case (0.625): return [-1,-1,posZ,0,-1,normZ,u,v];
+      case (0.75): return [1,-1,posZ,0,-1,normZ,u,v];
+      case (0.875): return [1,-1,posZ,1,0,normZ,u,v];
+      case (1): return [1,1,posZ,1,0,normZ,u,v];
+    }
+  }   
 }
 
 //create a parametric shape as a single triangle strip 
@@ -212,33 +199,42 @@ function animate(gl) {
    setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uCursor', cursor);
 
-   var zRange = 8; // DEFINE A RANGE FOR Z VALUES
-   var fl = 30;      // FOCAL LENGTH OF VIRTUAL CAMERA
+   var zRange =7; // DEFINE A RANGE FOR Z VALUES
+   var fl = 3;      // FOCAL LENGTH OF VIRTUAL CAMERA
 
    // DEFINE THE PERSPECTIVE PROJECTION MATRIX
    setUniform('Matrix4fv', 'uPPMat', false, [
-          -1,  0,         0,     0,
-          0,  1,         0,     0,
+          -1,  0,         .4,     0,
+          0,  -1,         0,     0,
           0,  0, -1/zRange, -1/fl,
-          0,  0,         0,     1,
+          0,  0,         .2,     1,
    ]);
 
 
    // SEND SPHERE GEOMETRY DOWN TO GPU AS A TRIANGLE STRIP
    setBuffer(gl, sphereTriangleStrip);
 
+   let t = .5 + .5 * Math.sin(3 * time);
 
-   // FIRST SPHERE, USING SPHERE TRIANGLE STRIP
+   // FIRST SPHERE, USING TRIANGLE STRIP
    //movement of the shapes
-   let c = Math.cos(2.5 * time);
-   let s = Math.sin(2.5 * time);
+   let c = Math.cos(5 * time);
+   let s = Math.sin(5 * time);
+
+    // handle rotation about the y axis 
+   let yPosition1 = -5.5;
+   let yPosition2 = 2.0;
+
+   // handle rotation about the x axis
+   let xPosition1 = -5.5;
+   let xPosition2 = 5.5;
 
    //positioning of the sphere 
    let objMat1 = [
       -c,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
        0,   -1,  1, 0,
        -s,   0,  c, 0,
-        -.1, 0, -c*2, 1.5,
+        0, 0, -c*2, 1.8,
    ];
 
    let norMat1 = matrixInvert(objMat1);
@@ -252,10 +248,10 @@ function animate(gl) {
 
    //cylinder 
    let objMat2 = [
-      -c,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
+      c,   0,  s, 0,    // uObjectMat SCALES UNIFORMLY
        0,   1,  1, 0,
-       s,   0,  c, 0,
-        .3, 2, c, 6.5,
+       -s,   0,  c, 0,
+        -2, -2, c, 3,
    ];
 
    let norMat2 = matrixInvert(objMat2);
@@ -270,7 +266,7 @@ function animate(gl) {
       c*.5,   0,  -s, 0,    // uObjectMat SCALES UNIFORMLY
        0,   1,  0, 0,
        s,   0,  c*4, 0,
-        -.6, -1, c*1.3, 4,
+        2, 2, c*1.3, 3.5,
    ];
 
 
