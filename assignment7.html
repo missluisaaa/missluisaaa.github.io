@@ -1,1 +1,261 @@
+<script src=lib4.js></script>
 
+<body bgcolor=black text=white link=white alink=white vlink=white>
+<center>
+<canvas id='canvas1' width=400 height=400></canvas>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPos; // VERTEX ATTRIBUTES: POSITION
+   attribute vec3 aNor; //                    NORMAL
+   attribute vec2 aUV ; //                    TEXTURE U,V
+
+   uniform mat4 uPPMat;     // PERSPECTIVE PROJECTION MATRIX
+   uniform mat4 uObjectMat; // OBJECT TRANSFORMATION MATRIX
+   uniform mat4 uNormalMat; // NORMAL TRANSFORMATION MATRIX
+
+   varying   vec3 vPos; // TRANSFORMED POSITION
+   varying   vec3 vNor; // TRANSFORMED NORMAL
+   varying   vec2 vUV ;
+
+   void main() {
+      gl_Position = uPPMat * uObjectMat * vec4(aPos, 1.);
+      vPos = aPos;
+      vNor = (vec4(aNor, 0.) * uNormalMat).xyz;
+      vUV  = aUV ;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+varying vec3  vPos;
+varying vec3  vNor;
+varying vec2  vUV ;
+uniform vec3  uRGB;
+uniform mat4 uMat[3];
+
+void main() {
+   vec3 normal = normalize(vNor);
+   vec3 lDir = normalize(vec3(1.,1.,1.));
+   float c = 0.1 + 1.0 * max(0.,
+             dot(normal, lDir));
+   c*= noise(100. * tan(vPos * .1));
+   vec3 color = uRGB * c;
+   gl_FragColor = vec4(sqrt(color), 1.0);
+
+
+}</script>
+
+<script id='instructions' type='text/html'><font color=#ffb3b3>
+<p>
+DESCRIBE HOMEWORK 7
+</script>
+   
+<script>
+var vs = my_vertex_shader.innerHTML,
+    fs = my_fragment_shader.innerHTML;
+    fs = fs.substring(1, fs.length);
+
+document.body.innerHTML = [''
+   ,'<center><font size=6 color=#ffb3b3> Homework 7: Hierarchical Models </center>'
+   ,'<TABLE cellspacing=0 cellpadding=0><TR>'
+   ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
+   ,'</TR><TR>'
+   ,'<table cellspacing=10>'
+   ,'<tr>'
+   ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
+   ,'<td valign=top>'
+   ,'<textArea id=textArea spellcheck=false '
+   ,'style="font:14px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'></textArea>'
+   ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
+   ,'<td valign=top><font size=5>' + instructions.innerHTML + '</td>'
+   ,'</tr></table>'
+   ,'</TR></TABLE>'
+   ].join('');
+
+var i, text = fs.split('\n'), cols = 0;
+for (i = 0 ; i < text.length ; i++)
+   cols = Math.max(cols, text[i].length);
+
+textArea.rows = text.length;
+textArea.cols = cols;
+textArea.value = fs;
+textArea.style.backgroundColor = '#202020';
+textArea.style.color = 'white';
+textArea.onkeyup = function() { canvas1.setShaders(vs, this.value); }
+
+var startTime = Date.now();
+
+// RETURNS ONE VERTEX OF A CYLINDER, GIVEN PARAMETRIC u,v
+function cylinder(u, v) {
+          let theta = 5 * Math.PI * u;
+          let x = Math.cos(theta);
+          let y = Math.sin(theta);
+          //let z = Math.sin(phi);
+          if (v == 0) {
+              return [0, 0, -1, 0, 0, -1, u, v];
+          } 
+          else if (v == 0.2) {
+              return [x, y, -1, 0, 0, -1, u, v];
+          } 
+          else if (v == 0.4) {
+              return [x, y, -1, x, y, 0, u, v];
+          } 
+          else if (v == 0.6) {
+              return [x, y, 1, x, y, 0, u, v];
+          } 
+          else if (v == 0.8) {
+              return [x, y, 1, 0, 0, 1, u, v];
+          } 
+          else if (v == 1.0) {
+              return [0, 0, 1, 0, 0, 1, u, v];
+          }
+      }
+
+//CREATE A PARAMETRIC SHAPE AS A SINGLE TRIANGLE STRIP
+function createParametricShape(func, nu, nv) {
+  let vertices = [];
+  for (let j = 0 ; j < nv ; j++) {
+     let v0 =  j    / nv;
+     let v1 = (j+1) / nv;
+     for (let i = 0 ; i <= nu ; i++) {
+        let u = i / nu;
+  if (j % 2)
+     u = 1 - u;
+  vertices = vertices.concat(func(u, v0));
+  vertices = vertices.concat(func(u, v1));
+     }
+  }
+  return vertices;
+}
+
+function multiplyMatrices(a, b) {
+  var n, temp = [];
+  for (n = 0 ; n < 16 ; n++)
+      temp.push( a[n&3     ] * b[    n&12] +
+                a[n&3 |  4] * b[1 | n&12] +
+                a[n&3 |  8] * b[2 | n&12] +
+                a[n&3 | 12] * b[3 | n&12] );
+  return temp;
+}
+
+function identity(){
+  let idMat = [
+         2,0,2,0,
+         -2,1,1,0,
+         0,1,1,0,
+         1,0,0, -1,
+   ];
+   return idMat;
+}
+//transform matrix
+class transform{
+  constructor(){
+    this.ptr = 0;
+    this.mvalues = [];
+    this.mvalues.push(identity());
+  }
+  //get the matrix
+  getMat(){
+    return this.mvalues[this.ptr];
+  }
+
+  //increment by 1
+  save(){
+    this.mvalues[this.ptr+1] = this.mvalues[this.ptr];
+    this.ptr = this.ptr+1;
+  }
+
+  //translating the matrix
+  translate(a,b,c){
+    let m = [1, 0, 0, 0,
+             0, 0.5, 0, 0,
+             0, 0, 1, 0,
+             a, b, c, 1];
+    this.mvalues[this.ptr] = multiplyMatrices(m, this.mvalues[this.ptr], 4);
+  }
+  
+   rotateY(theta) {
+          let c = Math.cos(theta);
+          let s = Math.sin(theta);
+          let x  = [c,0,s,0,
+                        0,1,0,0,
+                       -s,0,c,0,
+                        0,0,c,1];
+       
+          this.mvalues[this.ptr] = multiplyMatrices(x, this.mvalues[this.ptr], 4);
+}
+
+  rotateX(theta) {
+          let c = Math.cos(4*theta);
+          let s = Math.sin(5*theta);
+          let x  = [1.2,0,0,0,
+                        0,c,-s,0,
+                       0,s,c,0,
+                        0,0,0,1];
+       
+          this.mvalues[this.ptr] = multiplyMatrices(x, this.mvalues[this.ptr], 4);
+  }
+
+  restore(){
+    this.ptr = this.ptr-1; 
+  }
+}
+
+const matrix = new transform();
+
+var cylinder = createParametricShape(cylinder,50,5);
+function cylinderMatrix(gl){ 
+
+   let time = (Date.now() - startTime) / 1000;
+
+   setUniform('1f', 'uTime', time);
+   setUniform('3fv', 'uCursor', cursor);
+
+   var zRange = 10; // DEFINE A RANGE FOR Z VALUES
+   var fl = 1;      // FOCAL LENGTH OF VIRTUAL CAMERA
+
+   // DEFINE THE PERSPECTIVE PROJECTION MATRIX
+
+   setUniform('Matrix4fv', 'uPPMat', false, [
+          1,  0,         0,     0,
+          0,  1,         0,     0,
+          0,  0, -1/zRange, -1/fl,
+          0,  0,         0,     1,
+   ]);
+  setBuffer(gl, cylinder);
+  let objM = matrix.getMat();
+  let norM = matrixInvert(objM);
+  setUniform('Matrix4fv', 'uObjectMat', false, objM);
+  setUniform('Matrix4fv', 'uNormalMat', false, norM);
+  setUniform('3fv', 'uRGB', [10,0.25,2.2]);
+  drawBuffer(gl);
+}
+
+function draw(gl) {
+  cylinderMatrix(gl);
+
+}
+function animate(gl) {
+  let time = (Date.now() - startTime) / 1000;
+  let c = Math.cos(.4*time);
+  let s = Math.tan(.4*time);
+  
+  matrix.save();
+  matrix.translate(s,s,.5);
+  cylinderMatrix(gl); 
+  matrix.rotateX(-1);
+  matrix.rotateY(s);
+  cylinderMatrix(gl);
+  draw(gl);
+  matrix.translate(0,time, 1);
+  matrix.rotateX(s);
+  cylinderMatrix(gl);
+  draw(gl);
+  matrix.restore();
+}
+
+
+gl_start(canvas1, vs, fs);
+</script>
