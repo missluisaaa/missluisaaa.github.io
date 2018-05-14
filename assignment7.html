@@ -39,7 +39,7 @@ void main() {
    vec3 lDir = normalize(vec3(1.,1.,1.));
    float c = 0.1 + 1.0 * max(0.,
              dot(normal, lDir));
-   c*= noise(100. * tan(vPos * .1));
+   c*= noise(100. * sin(vPos * 1.));
    vec3 color = uRGB * c;
    gl_FragColor = vec4(sqrt(color), 1.0);
 
@@ -48,7 +48,7 @@ void main() {
 
 <script id='instructions' type='text/html'><font color=#ffb3b3>
 <p>
-DESCRIBE HOMEWORK 7
+This model represents the creation of a star as it collides to gather dust and gas, as well as its journey through the Milky Way. This is done using cylinders to depict other planets and stars, using hierarchical models. 
 </script>
    
 <script>
@@ -145,7 +145,7 @@ function identity(){
          2,0,2,0,
          -2,1,1,0,
          0,1,1,0,
-         1,0,0, -1,
+         1,0,0, 1,
    ];
    return idMat;
 }
@@ -177,8 +177,8 @@ class transform{
   }
   
    rotateY(theta) {
-          let c = Math.cos(theta);
-          let s = Math.sin(theta);
+          let c = Math.cos(1.5*theta);
+          let s = Math.sin(1.5*theta);
           let x  = [c,0,s,0,
                         0,1,0,0,
                        -s,0,c,0,
@@ -190,12 +190,13 @@ class transform{
   rotateX(theta) {
           let c = Math.cos(4*theta);
           let s = Math.sin(5*theta);
-          let x  = [1.2,0,0,0,
+          let x  =  [1.2,0,0,0,
                         0,c,-s,0,
                        0,s,c,0,
                         0,0,0,1];
        
           this.mvalues[this.ptr] = multiplyMatrices(x, this.mvalues[this.ptr], 4);
+
   }
 
   restore(){
@@ -206,8 +207,8 @@ class transform{
 const matrix = new transform();
 
 var cylinder = createParametricShape(cylinder,50,5);
-function cylinderMatrix(gl){ 
 
+function cylinderMatrix(gl){ 
    let time = (Date.now() - startTime) / 1000;
 
    setUniform('1f', 'uTime', time);
